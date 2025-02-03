@@ -3,36 +3,36 @@ import { BaseEntity } from './base.entity';
 
 @Entity()
 export class User extends BaseEntity {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column('text', { nullable: true })
-    firstName: string;
+  @Column('text', { nullable: true })
+  firstName: string;
 
-    @Column('text', { nullable: true })
-    lastName: string;
+  @Column('text', { nullable: true })
+  lastName: string;
 
-    @Column('text', { nullable: false, unique: true })
-    email: string;
+  @Column('text', { nullable: false, unique: true })
+  email: string;
 
-    @Column('text', { nullable: false })
-    password: string;
+  @Column('text', { nullable: false })
+  password: string;
 
-    @Column('text', { nullable: true, default: 'Lviv' })
-    city: string;
+  @Column('text', { nullable: true, default: 'Lviv' })
+  city: string;
 
-    @Column('integer', { nullable: true })
-    age: number;
+  @Column('integer', { nullable: true })
+  age: number;
 
-    @Column({ default: false })
-    isActive: boolean;
+  @Column({ default: false })
+  isActive: boolean;
 
-    @Column({ nullable: true, default: null })
-    phone: string;
+  @Column({ nullable: true, default: null })
+  phone: string;
 
-    @Column({ nullable: true })
-    avatar: string;
+  @Column({ nullable: true })
+  avatar: string;
 
-    @Column({ default: 'User' })
-    role: string;
+  @Column({ default: 'User' })
+  role: string;
 }
