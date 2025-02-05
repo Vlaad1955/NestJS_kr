@@ -67,6 +67,32 @@ export class ReturnUserDto {
   createdAt: Date;
 }
 
+export class updateUserDto {
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false })
+  firstName: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false })
+  lastName: string;
+
+  @ApiProperty({
+    default: 'Lviv',
+    required: false,
+    description: 'User city',
+    example: 'Poltava',
+  })
+  @IsOptional()
+  city: string;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
+  age: number;
+}
+
 export class CreateUserDto extends ReturnUserDto {
   @IsString()
   @IsNotEmpty()
