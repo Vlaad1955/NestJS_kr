@@ -8,7 +8,7 @@ import {
   Headers,
   UseGuards,
   UnauthorizedException,
-  NotFoundException,
+  NotFoundException, Get,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto, UpdatePostDto } from './dto/post.dto';
@@ -40,5 +40,10 @@ export class PostsController {
     @Headers('Authorization') authHeader: string,
   ) {
     return this.postsService.deletePost(postId, authHeader);
+  }
+
+  @Get('/:userId')
+  async getUserPosts(@Param('userId') userId: string) {
+    return this.postsService.getUserPosts(userId);
   }
 }
