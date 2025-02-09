@@ -115,3 +115,21 @@ export class CreateUserDto extends ReturnUserDto {
   @ApiProperty({ required: true })
   password: string;
 }
+
+export class UserItemDto {
+  @ApiProperty()
+  id: string;
+  @ApiProperty()
+  email: string;
+  @ApiProperty()
+  firstName: string;
+  @ApiProperty({ required: false })
+  lastName: string;
+  @ApiProperty()
+  age: number;
+  @ApiProperty()
+  @IsOptional()
+  city: string;
+  @ApiProperty()
+  createdAt: Date;
+}

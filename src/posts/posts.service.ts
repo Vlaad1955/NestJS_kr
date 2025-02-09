@@ -87,4 +87,16 @@ export class PostsService {
 
     await this.postRepository.delete(post.id);
   }
+
+  async getUserPosts(userId: string): Promise<Post[]> {
+    const posts = await this.postRepository.find({
+      where: { user_id: userId },
+    });
+
+    if (!posts.length) {
+      throw new NotFoundException('No posts found for this user');
+    }
+
+    return posts;
+  }
 }
