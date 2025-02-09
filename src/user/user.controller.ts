@@ -8,19 +8,20 @@ import {
   Body,
   Get,
   Query,
-  NotFoundException,
+  NotFoundException, UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { updateUserDto, UserItemDto } from './dto/user.dto';
 import { ApiPaginatedResponse } from '../common/interface/response.interface';
 import { BaseQueryDto } from '../common/validator/base.query.validator';
-import { AuthGuard } from '@nestjs/passport';
 import { User } from '../database/entities/user.entity';
+import {AuthGuard} from "@nestjs/passport";
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @UseGuards(AuthGuard())
   @Delete('/delete/:id')
   async deleteUser(
     @Param('id') id: string,
@@ -39,6 +40,7 @@ export class UserController {
     return this.userService.deleteUser(userIdFromToken);
   }
 
+  @UseGuards(AuthGuard())
   @Patch(`/update/:id`)
   async update(
     @Param('id') id: string,
@@ -58,12 +60,14 @@ export class UserController {
     return this.userService.updateUser(userIdFromToken, updateUserDto);
   }
 
+  @UseGuards(AuthGuard())
   @ApiPaginatedResponse('entities', UserItemDto)
   @Get('/list')
   findAll(@Query() query: BaseQueryDto) {
     return this.userService.findAll(query);
   }
 
+  @UseGuards(AuthGuard())
   @Get('find/id/:id')
   async findUserById(@Param('id') id: string): Promise<User | string> {
     const user = await this.userService.findUserById(id);
@@ -75,6 +79,7 @@ export class UserController {
     return user;
   }
 
+  @UseGuards(AuthGuard())
   @Get('find/email')
   async findUserByEmail(@Query('email') email: string): Promise<User | string> {
     if (!email) {

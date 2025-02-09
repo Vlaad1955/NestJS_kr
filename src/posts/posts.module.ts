@@ -7,7 +7,7 @@ import { AuthModule } from '../auth/auth.module';
 import { PassportModule } from '@nestjs/passport';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post]), AuthModule, PassportModule],
+  imports: [TypeOrmModule.forFeature([Post]), AuthModule],
   controllers: [PostsController],
   providers: [PostsService],
 })

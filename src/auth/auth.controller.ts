@@ -3,10 +3,11 @@ import {
   Post,
   Body,
   Headers,
-  UnauthorizedException,
+  UnauthorizedException, UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto, LoginDto } from '../user/dto/user.dto';
+import {AuthGuard} from "@nestjs/passport";
 
 @Controller('auth')
 export class AuthController {
@@ -24,6 +25,7 @@ export class AuthController {
     return this.authService.signInUser(loginDto);
   }
 
+  @UseGuards(AuthGuard())
   @Post('/logout')
   async logOutUser(
     @Headers() headers: Record<string, string>,
