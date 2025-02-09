@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/database.module';
 import { UserModule } from './user/user.module';
 import configuration from './common/config/configuration';
 import { RedisModule } from '@webeleon/nestjs-redis';
+import { PostsModule } from './posts/posts.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RedisModule } from '@webeleon/nestjs-redis';
     }),
     DatabaseModule,
     UserModule,
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
