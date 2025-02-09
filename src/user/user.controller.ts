@@ -8,7 +8,6 @@ import {
   Body,
   Get,
   Query,
-  UseGuards,
   NotFoundException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
