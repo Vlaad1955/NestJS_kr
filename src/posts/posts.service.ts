@@ -18,7 +18,7 @@ export class PostsService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // Функція для витягування userId з токену
+  // Функція для витягнення userId з токену
   private extractUserIdFromToken(authHeader: string): string | null {
     if (!authHeader) {
       throw new ForbiddenException('Authorization header is missing');
@@ -32,21 +32,33 @@ export class PostsService {
     }
   }
 
-  async createPost(createPostDto: CreatePostDto, authHeader: string) {
-    const userId = this.extractUserIdFromToken(authHeader);
-
-    if (!userId) {
-      throw new UnauthorizedException('User ID is missing from token');
+  private async getUserIdFromAuthHeader(authHeader: string): Promise<string> {
+    try {
+      const userId = this.extractUserIdFromToken(authHeader);
+      if (!userId) {
+        throw new UnauthorizedException('User ID is missing from token');
+      }
+      return userId;
+    } catch (error) {
+      throw new UnauthorizedException(error);
     }
+  }
 
-    const post = this.postRepository.create({
-      ...createPostDto,
-      user_id: userId,
-    });
+  async createPost(createPostDto: CreatePostDto, authHeader: string) {
+    try {
+      const userId = await this.getUserIdFromAuthHeader(authHeader);
 
-    const savedPost = await this.postRepository.save(post);
+      const post = this.postRepository.create({
+        ...createPostDto,
+        user_id: userId,
+      });
 
-    return savedPost;
+      const savedPost = await this.postRepository.save(post);
+
+      return savedPost;
+    } catch (error) {
+      throw new UnauthorizedException(error);
+    }
   }
 
   async updatePost(
@@ -54,49 +66,61 @@ export class PostsService {
     updatePostDto: UpdatePostDto,
     authHeader: string,
   ): Promise<Post> {
-    const userId = this.extractUserIdFromToken(authHeader);
-    const post = await this.postRepository.findOne({ where: { id: postId } });
+    try {
+      const userId = await this.getUserIdFromAuthHeader(authHeader);
+      const post = await this.postRepository.findOne({ where: { id: postId } });
 
-    if (!post) {
-      throw new NotFoundException('Post not found');
+      if (!post) {
+        throw new NotFoundException('Post not found');
+      }
+
+      if (post.user_id !== userId) {
+        throw new ForbiddenException(
+          'You are not authorized to update this post',
+        );
+      }
+
+      Object.assign(post, updatePostDto);
+      return await this.postRepository.save(post);
+    } catch (error) {
+      throw new UnauthorizedException(error);
     }
-
-    if (post.user_id !== userId) {
-      throw new ForbiddenException(
-        'You are not authorized to update this post',
-      );
-    }
-
-    Object.assign(post, updatePostDto);
-    return await this.postRepository.save(post);
   }
 
   async deletePost(postId: string, authHeader: string): Promise<void> {
-    const userId = this.extractUserIdFromToken(authHeader);
-    const post = await this.postRepository.findOne({ where: { id: postId } });
+    try {
+      const userId = await this.getUserIdFromAuthHeader(authHeader);
+      const post = await this.postRepository.findOne({ where: { id: postId } });
 
-    if (!post) {
-      throw new NotFoundException('Post not found');
+      if (!post) {
+        throw new NotFoundException('Post not found');
+      }
+
+      if (post.user_id !== userId) {
+        throw new ForbiddenException(
+          'You are not authorized to delete this post',
+        );
+      }
+
+      await this.postRepository.delete(post.id);
+    } catch (error) {
+      throw new UnauthorizedException(error);
     }
-
-    if (post.user_id !== userId) {
-      throw new ForbiddenException(
-        'You are not authorized to delete this post',
-      );
-    }
-
-    await this.postRepository.delete(post.id);
   }
 
   async getUserPosts(userId: string): Promise<Post[]> {
-    const posts = await this.postRepository.find({
-      where: { user_id: userId },
-    });
+    try {
+      const posts = await this.postRepository.find({
+        where: { user_id: userId },
+      });
 
-    if (!posts.length) {
-      throw new NotFoundException('No posts found for this user');
+      if (!posts.length) {
+        throw new NotFoundException('No posts found for this user');
+      }
+
+      return posts;
+    } catch (error) {
+      throw new UnauthorizedException(error);
     }
-
-    return posts;
   }
 }

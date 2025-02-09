@@ -6,11 +6,13 @@ import {
   Delete,
   Param,
   Headers,
-  Get, UseGuards,
+  Get,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto, UpdatePostDto } from './dto/post.dto';
-import {AuthGuard} from "@nestjs/passport";
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('posts')
 export class PostsController {
