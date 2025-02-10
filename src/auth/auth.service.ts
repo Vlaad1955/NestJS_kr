@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../database/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { InjectRedisClient, RedisClient } from '@webeleon/nestjs-redis';
+import { RedisService } from '../../redis/redis.service'; // Виправлено
 import { JwtService } from '@nestjs/jwt';
 import * as process from 'process';
 import { CreateUserDto, LoginDto } from '../user/dto/user.dto';
@@ -16,14 +16,13 @@ import { CreateUserDto, LoginDto } from '../user/dto/user.dto';
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User) private readonly userRepository: Repository<User>,
-    @InjectRedisClient() private readonly redisClient: RedisClient,
-    private readonly jwtService: JwtService,
+      @InjectRepository(User) private readonly userRepository: Repository<User>,
+      private readonly redisService: RedisService, // Виправлено
+      private readonly jwtService: JwtService,
   ) {}
 
-  async signUpUser(
-    createAuthDto: CreateUserDto,
-  ): Promise<{ accessToken: string }> {
+  // Реєстрація користувача
+  async signUpUser(createAuthDto: CreateUserDto): Promise<{ accessToken: string }> {
     try {
       if (!createAuthDto.email || !createAuthDto.password) {
         throw new BadRequestException('Email and password are required');
@@ -38,7 +37,7 @@ export class AuthService {
 
       const password = await bcrypt.hash(createAuthDto.password, 10);
       const user: User = await this.userRepository.save(
-        this.userRepository.create({ ...createAuthDto, password }),
+          this.userRepository.create({ ...createAuthDto, password }),
       );
 
       const token = await this.signIn(user.id, user.email);
@@ -51,6 +50,7 @@ export class AuthService {
     }
   }
 
+  // Вхід користувача
   async signInUser(loginDto: LoginDto): Promise<{ accessToken: string }> {
     try {
       if (!loginDto.email || !loginDto.password) {
@@ -66,8 +66,8 @@ export class AuthService {
       }
 
       const isPasswordValid = await bcrypt.compare(
-        loginDto.password,
-        user.password,
+          loginDto.password,
+          user.password,
       );
 
       if (!isPasswordValid) {
@@ -75,7 +75,6 @@ export class AuthService {
       }
 
       const token = await this.signIn(user.id, user.email);
-
       await this.storeTokenInRedis(user.id, token);
 
       return { accessToken: token };
@@ -84,10 +83,12 @@ export class AuthService {
     }
   }
 
+  // Генерація JWT токену
   async signIn(userId: string, userEmail: string): Promise<string> {
     return this.jwtService.sign({ id: userId, email: userEmail });
   }
 
+  // Вихід користувача
   async logOutUser(authHeader: string): Promise<{ message: string }> {
     try {
       if (!authHeader) {
@@ -111,16 +112,14 @@ export class AuthService {
     }
   }
 
+  // Валідація користувача
   async validateUser(userId: string, userEmail: string): Promise<User> {
     if (!userId || !userEmail) {
-      throw new UnauthorizedException(`userId or userEmail not found`);
+      throw new UnauthorizedException('userId or userEmail not found');
     }
 
     const user = await this.userRepository.findOne({
-      where: {
-        id: userId,
-        email: userEmail,
-      },
+      where: { id: userId, email: userEmail },
     });
 
     if (!user) {
@@ -130,34 +129,29 @@ export class AuthService {
     return user;
   }
 
-  private async storeTokenInRedis(
-    userId: string,
-    token: string,
-  ): Promise<void> {
+  // Збереження токену в Redis
+  private async storeTokenInRedis(userId: string, token: string): Promise<void> {
     try {
-      const redisUserKey = process.env['Redis_UserKey'];
-      const redisUserTime = process.env['Redis_UserTime'];
+      const redisUserKey = process.env['Redis_UserKey'] || 'user-token';
+      const redisUserTime = process.env['Redis_UserTime']
+          ? parseInt(process.env['Redis_UserTime'], 10)
+          : 3600; // 1 год
 
-      if (redisUserKey && redisUserTime) {
-        await this.redisClient.setEx(
+      await this.redisService.set(
           `${redisUserKey}-${userId}`,
-          parseInt(redisUserTime),
           token,
-        );
-      } else {
-        throw new UnauthorizedException();
-      }
+          redisUserTime,
+      );
     } catch (e) {
       throw new BadRequestException(e);
     }
   }
 
+  // Видалення токену з Redis
   private async removeTokenFromRedis(userId: string): Promise<void> {
     try {
-      const redisUserKey = process.env['Redis_UserKey'];
-      if (redisUserKey) {
-        await this.redisClient.del(`${redisUserKey}-${userId}`);
-      }
+      const redisUserKey = process.env['Redis_UserKey'] || 'user-token';
+      await this.redisService.del(`${redisUserKey}-${userId}`);
     } catch (e) {
       throw new BadRequestException(e);
     }
