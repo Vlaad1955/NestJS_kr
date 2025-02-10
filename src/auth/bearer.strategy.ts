@@ -4,15 +4,15 @@ import { ExtractJwt } from 'passport-jwt';
 import * as process from 'process';
 import { Strategy } from 'passport-http-bearer';
 import { JwtService } from '@nestjs/jwt';
-import { RedisService } from '../../redis/redis.service';  // Інжекція кастомного RedisService
+import { RedisService } from '../../redis/redis.service'; // Інжекція кастомного RedisService
 import { AuthService } from './auth.service';
 
 @Injectable()
 export class BearerStrategy extends PassportStrategy(Strategy, `bearer`) {
   constructor(
-      private readonly jwtService: JwtService,
-      private readonly redisService: RedisService,  // Використовуємо RedisService
-      private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
+    private readonly redisService: RedisService, // Використовуємо RedisService
+    private readonly authService: AuthService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -27,7 +27,9 @@ export class BearerStrategy extends PassportStrategy(Strategy, `bearer`) {
       const decodedToken: any = this.jwtService.decode(token);
 
       // Перевірка на наявність токену в Redis
-      const exists = await this.redisService.exists(`${redisUserKey}-${decodedToken.id}`);
+      const exists = await this.redisService.exists(
+        `${redisUserKey}-${decodedToken.id}`,
+      );
       if (!exists) {
         throw new UnauthorizedException('Token not found in Redis');
       }
@@ -42,7 +44,10 @@ export class BearerStrategy extends PassportStrategy(Strategy, `bearer`) {
       }
 
       // Отримуємо користувача
-      const user = await this.authService.validateUser(decodedToken.id, decodedToken.email);
+      const user = await this.authService.validateUser(
+        decodedToken.id,
+        decodedToken.email,
+      );
       return user; // Повертаємо користувача, якщо все добре
     } catch (e) {
       // Помилки при перевірці токену або Redis

@@ -16,13 +16,15 @@ import { CreateUserDto, LoginDto } from '../user/dto/user.dto';
 @Injectable()
 export class AuthService {
   constructor(
-      @InjectRepository(User) private readonly userRepository: Repository<User>,
-      private readonly redisService: RedisService, // Виправлено
-      private readonly jwtService: JwtService,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly redisService: RedisService, // Виправлено
+    private readonly jwtService: JwtService,
   ) {}
 
   // Реєстрація користувача
-  async signUpUser(createAuthDto: CreateUserDto): Promise<{ accessToken: string }> {
+  async signUpUser(
+    createAuthDto: CreateUserDto,
+  ): Promise<{ accessToken: string }> {
     try {
       if (!createAuthDto.email || !createAuthDto.password) {
         throw new BadRequestException('Email and password are required');
@@ -37,7 +39,7 @@ export class AuthService {
 
       const password = await bcrypt.hash(createAuthDto.password, 10);
       const user: User = await this.userRepository.save(
-          this.userRepository.create({ ...createAuthDto, password }),
+        this.userRepository.create({ ...createAuthDto, password }),
       );
 
       const token = await this.signIn(user.id, user.email);
@@ -66,8 +68,8 @@ export class AuthService {
       }
 
       const isPasswordValid = await bcrypt.compare(
-          loginDto.password,
-          user.password,
+        loginDto.password,
+        user.password,
       );
 
       if (!isPasswordValid) {
@@ -130,17 +132,20 @@ export class AuthService {
   }
 
   // Збереження токену в Redis
-  private async storeTokenInRedis(userId: string, token: string): Promise<void> {
+  private async storeTokenInRedis(
+    userId: string,
+    token: string,
+  ): Promise<void> {
     try {
       const redisUserKey = process.env['Redis_UserKey'] || 'user-token';
       const redisUserTime = process.env['Redis_UserTime']
-          ? parseInt(process.env['Redis_UserTime'], 10)
-          : 3600; // 1 год
+        ? parseInt(process.env['Redis_UserTime'], 10)
+        : 3600; // 1 год
 
       await this.redisService.set(
-          `${redisUserKey}-${userId}`,
-          token,
-          redisUserTime,
+        `${redisUserKey}-${userId}`,
+        token,
+        redisUserTime,
       );
     } catch (e) {
       throw new BadRequestException(e);
