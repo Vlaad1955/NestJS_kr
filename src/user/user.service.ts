@@ -25,13 +25,13 @@ export class UserService {
   }
 
   async deleteUser(userId: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
     try {
-      const user = await this.userRepository.findOne({ where: { id: userId } });
-
-      if (!user) {
-        throw new UnauthorizedException('User not found');
-      }
-
       await this.userRepository.delete(userId);
       return { message: 'User successfully deleted' };
     } catch (error) {
@@ -43,13 +43,13 @@ export class UserService {
     userId: string,
     updateUserDto: updateUserDto,
   ): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
     try {
-      const user = await this.userRepository.findOne({ where: { id: userId } });
-
-      if (!user) {
-        throw new UnauthorizedException('User not found');
-      }
-
       user.firstName = updateUserDto.firstName ?? user.firstName;
       user.lastName = updateUserDto.lastName ?? user.lastName;
       user.city = updateUserDto.city ?? user.city;
